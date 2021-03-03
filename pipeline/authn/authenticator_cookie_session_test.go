@@ -168,6 +168,21 @@ func TestAuthenticatorCookieSession(t *testing.T) {
 				Extra:   map[string]interface{}{"session": map[string]interface{}{"foo": "bar"}, "identity": map[string]interface{}{"id": "123"}},
 			}, session)
 		})
+
+		t.Run("description=should substring on subject", func(t *testing.T) {
+			testServer, _ := makeServer(200, `{"identity": {"id": "123"}, "session": {"foo": "bar"}}`)
+			err := pipelineAuthenticator.Authenticate(
+				makeRequest("GET", "/", map[string]string{"sessionid": "zyx"}, ""),
+				session,
+				json.RawMessage(fmt.Sprintf(`{"check_session_url": "%s", "subject_from": "identity.id|@substring:1", "extra_from": "@this"}`, testServer.URL)),
+				nil,
+			)
+			require.NoError(t, err, "%#v", errors.Cause(err))
+			assert.Equal(t, &AuthenticationSession{
+				Subject: "23",
+				Extra:   map[string]interface{}{"session": map[string]interface{}{"foo": "bar"}, "identity": map[string]interface{}{"id": "123"}},
+			}, session)
+		})
 	})
 }
 

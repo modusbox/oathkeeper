@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
+	"log"
 
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
@@ -21,6 +23,15 @@ import (
 func init() {
 	gjson.AddModifier("this", func(json, arg string) string {
 		return json
+	})
+	gjson.AddModifier("substring", func(json, arg string) string {
+		i, err := strconv.Atoi(arg)
+		if err != nil {
+			log.Print(err)
+			return "Non-integer substring argument"
+		}
+		// +1 to get rid of first quotation, then we add it back in
+		return `"` + string(json[i+1:])
 	})
 }
 
